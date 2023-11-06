@@ -10,11 +10,28 @@ interface Transaction {
     createdAt: string;
 }
 
+// Esta seria uma forma viável de tipar o transaction da função createTransaction
+// interface TransactionInput {
+//     title: string;
+//     amount: number;
+//     category: string;
+//     type: string;
+// }
+
+type TransactionInput = Omit<Transaction, 'id' | 'createdAt'>
+
 interface TransactionProviderProps {
     children: ReactNode
 }
 
-export const TransactionsContext = createContext<Transaction[]>([])
+interface TransactionContextData {
+    transactions: Transaction[],
+    createTransaction: (transaction: TransactionInput) => void
+}
+
+export const TransactionsContext = createContext<TransactionContextData>(
+    {} as TransactionContextData
+)
 
 export function TransactionsProvider({ children }: TransactionProviderProps) {
     const [transactions, setTransaction] = useState<Transaction[]> ([])
@@ -25,8 +42,13 @@ export function TransactionsProvider({ children }: TransactionProviderProps) {
          .then(response => setTransaction(response.data.transactions))
     }, [])
 
+    function createTransaction(transaction: TransactionInput) {
+  
+      api.post('/transactions', transaction)
+    }
+
     return (
-        <TransactionsContext.Provider value={transactions}>
+        <TransactionsContext.Provider value={{transactions, createTransaction}}>
             {children}
         </TransactionsContext.Provider>
     )
